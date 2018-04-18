@@ -24,8 +24,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     @IBOutlet weak var labelResults: UITextView!
     @IBOutlet weak var faceResults: UITextView!
+    @IBOutlet weak var textResults: UITextView!
     
-    var googleAPIKey = "YOUR_API_KEY"
+    var googleAPIKey = "AIzaSyCQ5BbmV8pIVCzEvuEnO6O2KFpdtxAf3LU"
     var googleURL: URL {
         return URL(string: "https://vision.googleapis.com/v1/images:annotate?key=\(googleAPIKey)")!
     }
@@ -61,14 +62,13 @@ extension ViewController {
         
         // Update UI on the main thread
         DispatchQueue.main.async(execute: {
-            
-            
+
             // Use SwiftyJSON to parse results
             let json = JSON(data: dataToParse)
             let errorObj: JSON = json["error"]
             
             self.spinner.stopAnimating()
-            self.imageView.isHidden = true
+            self.imageView.isHidden = false
             self.labelResults.isHidden = false
             self.faceResults.isHidden = false
             self.faceResults.text = ""
@@ -135,6 +135,13 @@ extension ViewController {
                 } else {
                     self.labelResults.text = "No labels found"
                 }
+                
+                let textAnnotations: JSON = responses["textAnnotations"]
+                if textAnnotations != nil {
+                    self.textResults.text = "Texts found: \(textAnnotations[0]["description"].stringValue)"
+                } else {
+                    self.textResults.text = "No texts found"
+                }
             }
         })
         
@@ -144,6 +151,7 @@ extension ViewController {
         if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage {
             imageView.contentMode = .scaleAspectFit
             imageView.isHidden = true // You could optionally display the image here by setting imageView.image = pickedImage
+            imageView.image = pickedImage
             spinner.startAnimating()
             faceResults.isHidden = true
             labelResults.isHidden = true
@@ -208,6 +216,10 @@ extension ViewController {
                     ],
                     [
                         "type": "FACE_DETECTION",
+                        "maxResults": 10
+                    ],
+                    [
+                        "type": "TEXT_DETECTION",
                         "maxResults": 10
                     ]
                 ]
